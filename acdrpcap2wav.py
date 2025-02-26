@@ -17,7 +17,7 @@ class ACDRpcap2wav:
         self.trace_dict = {
             '10': 'tdm2dsp',
             '1': 'dsp2net',
-            '0': 'net23dsp',
+            '0': 'net2dsp',
             '9': 'dsp2tdm',
             '20': 'beforeVOIPencoder',
             '22': 'beforeNETencoder'
@@ -46,29 +46,41 @@ class ACDRpcap2wav:
     def gather_sessionids(self):
         ## filter for all session ids, ssrc, and tracepoint values ##
         print("Searching...")
+        pcap_filter = (
+            f'(acdr.session_id || acdr.full_session_id)'
+            f' && (acdr.trace_pt != 0 || acdr.trace_pt != "System")'
+            f' && rtp'
+        )
         all_sids = subprocess.run(
             [
                 self.tshark,
                 '-r', self.pcap,
                 '-T', 'fields',
+                '-e', 'acdr.session_id',
                 '-e', 'acdr.full_session_id',
                 '-e', 'rtp.ssrc',
                 '-e', 'acdr.trace_pt',
-                '-Y', 'acdr.full_session_id && rtp && (acdr.trace_pt != 0 || acdr.trace_pt != "System")'
+                '-Y', pcap_filter
             ],
             capture_output=True,
             text=True
         )
-        ## 'ccfc41:27:2922820\t0x0000101e\t10' ##
+        # print(all_sids) ##check for parse error ##
+        ## '2922820\tccfc41:27:2922820\t0x0000101e\t10' ##
         ## filter for unique values only ##
         uniques = set(all_sids.stdout.splitlines())
         print(f"   Total unique streams found in pcap: {len(uniques)}")
 
         for u in uniques:
-            values = u.split('\t')  ## ['ccfc41:27', '0x00001004', '10'] ##
-            sid = values[0]
-            ssrc = values[1]
-            tp = values[2]
+            values = u.split('\t')
+            print(values)
+            ## Check if a result was found and use it, else use second value ##
+            if values[0] != "":
+                sid = values[0]  ## ['277745452', '', '0x00001000', '10'] ##
+            else:
+                sid = values[1]  ## ['', 'ccfc41:27', '0x00001004', '10'] ##
+            ssrc = values[2]
+            tp = values[3]
             if sid not in self.sid_dict:
                 self.sid_dict[sid] = []
             self.sid_dict[sid].append((ssrc, tp))
@@ -95,20 +107,31 @@ class ACDRpcap2wav:
             sid_dir.mkdir(parents=True, exist_ok=True)
             print(f"\nSession ID: {sid}")
             print(f"Number of streams: {len(values)}")
+            sid_filter = f'(acdr.full_session_id == {sid})'
+            sid_pcap = sid_dir / f"{sid.replace(':', '.')}.pcapng"
+            ## checks for sid filter type by : ##
+            if ":" not in sid:
+                sid_filter = f'(acdr.session_id == {sid})'
+                sid_pcap = sid_dir / f"{sid}.pcapng"
+            ## Filtering input pcap for entire session id ##
+            ## Puts file in folder for anaysis or verifying audio conversion ##
+            subprocess.run(
+                [
+                    self.tshark,
+                    '-r', self.pcap,
+                    '-Y', sid_filter,
+                    '-w', sid_pcap
+                ]
+            )
             for ssrc, tp in values:
-                sid_pcap = sid_dir / f"{sid.replace(':', '.')}.pcapng"
-                sid_filter = f"acdr.full_session_id == {sid}"
-                ## Filter input pcap for acdr.full_session_id to grab all data for call ##
-                ## Puts file in folder for anaysis or verifying audio conversion ##
-                subprocess.run(
-                    [
-                        self.tshark,
-                        '-r', self.pcap,
-                        '-Y', sid_filter,
-                        '-w', sid_pcap
-                    ]
+                print(f"   rtp.ssrc: {ssrc}, acdr.trace_pt: {tp}")
+                ## Filter rtp for conversion ##
+                rtp_filter = (
+                    sid_filter +
+                    f" && rtp.ssrc == {ssrc}"
+                    f" && acdr.trace_pt == {tp}"
+                    f" && rtp"
                 )
-                rtp_filter = f"acdr.full_session_id == {sid} && rtp.ssrc == {ssrc} && acdr.trace_pt == {tp} && rtp"
                 ## load the rtp.payload hex values into stdout ##
                 ## ('-e', 'rtp.payload' = \nffe7f) ##
                 ## ('-e rtp.payload' = ff:ee:fe:ee) ##
@@ -130,7 +153,7 @@ class ACDRpcap2wav:
                 ## Filter through dictionary to match the acdr.trace_pt value to friendly name ##
                 if tp in self.trace_dict.keys():
                     trace_name = self.trace_dict[tp]
-                    out_wav = sid_dir / f"{ssrc}-{trace_name}.wav"
+                    out_wav = sid_dir / f"{trace_name}-{ssrc}.wav"
                 else:
                     out_wav = sid_dir / f"{ssrc}-{tp}.wav"
                 ## Write audio data to file ##
@@ -143,12 +166,11 @@ class ACDRpcap2wav:
                 with wave.open(str(out_wav), 'wb') as wavfile:
                     wavfile.setparams((nchannels, sampwidth, framerate, 0, comptype, compname))
                     wavfile.writeframes(pcm_data)
-                print(f"   rtp.ssrc: {ssrc}, acdr.trace_pt: {tp}")
 
 if __name__ == '__main__':
     ##  takes the file name and parses the info ##
-    pcap_file = sys.argv[1]
-    # pcap_file = "test.pcapng"
+    # pcap_file = sys.argv[1]
+    pcap_file = "m1k.pcapng"
     print("╔═════════════════════════════════════════════════╗")
     print("║   AudioCodes Debug Recording Audio Extraction   ║")
     print("╚═════════════════════════════════════════════════╝")

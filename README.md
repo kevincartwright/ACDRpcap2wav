@@ -29,8 +29,12 @@ Users can target a specific AudioCodes session (using the full session ID found 
     - `/usr/local/bin/tshark`
   - macOS:  
     - `/Applications/Wireshark.app/Contents/MacOS/tshark`
-- **AudioCodes Full Session ID**  
-  (Obtained from syslogs) for filtering specific sessions.
+- **AudioCodes Debug Recording**
+  - Pcap file that includes AudiocCodes Debug Recording traffic.
+  - Models supported:
+    - AudioCodes MP114 or MP118
+    - Audiocodes M1K or M1KB
+    - AudioCodes M800
 - Python modules: `sys`, `subprocess`, `binascii`, `wave`, `time`, `audioop`, and `pathlib`.
 
 > **Note:** The `audioop` module is deprecated in Python 3.11. Consider alternatives if using newer Python versions.
