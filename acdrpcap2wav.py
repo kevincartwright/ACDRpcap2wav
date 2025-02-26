@@ -73,7 +73,6 @@ class ACDRpcap2wav:
 
         for u in uniques:
             values = u.split('\t')
-            print(values)
             ## Check if a result was found and use it, else use second value ##
             if values[0] != "":
                 sid = values[0]  ## ['277745452', '', '0x00001000', '10'] ##
