@@ -31,8 +31,8 @@ Users can target a specific AudioCodes session (using the full session ID found 
     - `/Applications/Wireshark.app/Contents/MacOS/tshark`
 - **AudioCodes Debug Recording**
   - Pcap file that includes AudiocCodes Debug Recording traffic.
-  - Models supported:
-    - AudioCodes MP114 or MP118
+  - Models supported and tested:
+    - AudioCodes MP-114 or MP-118
     - Audiocodes M1K or M1KB
     - AudioCodes M800
 - Python modules: `sys`, `subprocess`, `binascii`, `wave`, `time`, `audioop`, and `pathlib`.

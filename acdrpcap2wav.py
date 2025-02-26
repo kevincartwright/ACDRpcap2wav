@@ -169,8 +169,8 @@ class ACDRpcap2wav:
 
 if __name__ == '__main__':
     ##  takes the file name and parses the info ##
-    # pcap_file = sys.argv[1]
-    pcap_file = "m1k.pcapng"
+    pcap_file = sys.argv[1]
+    # pcap_file = "m1k.pcapng"
     print("╔═════════════════════════════════════════════════╗")
     print("║   AudioCodes Debug Recording Audio Extraction   ║")
     print("╚═════════════════════════════════════════════════╝")
