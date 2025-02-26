@@ -19,7 +19,7 @@ Users can target a specific AudioCodes session (using the full session ID found 
 ## Requirements
 
 - **Python 3.7+**
-- **Wireshark/tshark**  
+- **Wireshark/tshark 4.X+**  
   The script checks for `tshark` in common installation paths:
   - Windows:  
     - `C:\Program Files\Wireshark\tshark.exe`
