@@ -20,7 +20,9 @@ class ACDRpcap2wav:
             '0': 'net2dsp',
             '9': 'dsp2tdm',
             '20': 'beforeVOIPencoder',
-            '22': 'beforeNETencoder'
+            '22': 'beforeNETencoder',
+            '18': 'host2dsp',
+            '24': 'dspinternal2dsp'
         }
 
     def tshark_check(self):
@@ -152,9 +154,9 @@ class ACDRpcap2wav:
                 ## Filter through dictionary to match the acdr.trace_pt value to friendly name ##
                 if tp in self.trace_dict.keys():
                     trace_name = self.trace_dict[tp]
-                    out_wav = sid_dir / f"{trace_name}-{ssrc}.wav"
+                    out_wav = sid_dir / f"{tp}_{trace_name}_{ssrc}.wav"
                 else:
-                    out_wav = sid_dir / f"{ssrc}-{tp}.wav"
+                    out_wav = sid_dir / f"{tp}_{ssrc}.wav"
                 ## Write audio data to file ##
                 ## Set the audio parameters ##
                 nchannels = 1  ## Mono ##
@@ -169,7 +171,7 @@ class ACDRpcap2wav:
 if __name__ == '__main__':
     ##  takes the file name and parses the info ##
     pcap_file = sys.argv[1]
-    # pcap_file = "m1k.pcapng"
+    # pcap_file = "test.pcapng"
     print("╔═════════════════════════════════════════════════╗")
     print("║   AudioCodes Debug Recording Audio Extraction   ║")
     print("╚═════════════════════════════════════════════════╝")
