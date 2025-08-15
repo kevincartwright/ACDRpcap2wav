@@ -3,7 +3,7 @@ import subprocess
 import binascii
 import wave
 import time
-import audioop  ## Depreciated in python 3.11 ##
+import audioop  ## DeprecationWarning: 'audioop' is deprecated and slated for removal in Python 3.13 ##
 from pathlib import Path
 
 class ACDRpcap2wav:
